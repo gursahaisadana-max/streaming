@@ -463,11 +463,13 @@ function cardHTML(g){
       '<div class="score'+(t.score == null ? ' dim' : '')+(flash ? ' flash' : '')+'">'+(t.score == null ? '–' : esc(t.score))+'</div></div>';
   }).join('');
   let btn = '';
-  if (ds === 'live') btn = findStream(g)
+  const hasLink = !!findStream(g);
+  if (ds === 'live') btn = hasLink
     ? '<button class="btn stream" data-act="stream" data-k="'+k+'">▶ STREAM NOW</button>'
     : '<button class="btn grey" disabled>No stream link yet</button>';
   else if (ds === 'soon'){ const on = rems.has(g.key);
-    btn = '<button class="btn remind" data-act="remind" data-k="'+k+'" aria-pressed="'+on+'">'+(on ? '✓ REMINDER SET' : 'REMIND ME')+'</button><p class="fine">Reminders only work while this page is open.</p>'; }
+    btn = (hasLink ? '<button class="btn stream" data-act="stream" data-k="'+k+'">▶ OPEN STREAM</button>' : '')+
+      '<button class="btn remind" data-act="remind" data-k="'+k+'" aria-pressed="'+on+'">'+(on ? '✓ REMINDER SET' : 'REMIND ME')+'</button><p class="fine">Reminders only work while this page is open.</p>'; }
   else if (ds === 'final') btn = '<button class="btn recap" data-act="recap" data-k="'+k+'">RECAP</button>';
   return '<article class="card '+g.league+'"><div class="top">'+tag+
     '<button class="star" data-act="fav" data-k="'+k+'" aria-pressed="'+fav+'" aria-label="Favorite '+esc(g.teams[0].code)+' at '+esc(g.teams[1].code)+'">'+(fav ? '★' : '☆')+'</button></div>'+
