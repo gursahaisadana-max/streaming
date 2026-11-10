@@ -542,6 +542,7 @@ function openPlayer(k){
   top.append(back, ttl);
   const wrap = document.createElement('div'); wrap.className = 'ratio';            // 16:9, full width
   const f = document.createElement('iframe');
+   f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms'); // must come before src
   f.src = url; f.title = 'Live stream: '+ttl.textContent;
   f.allow = (settings.autoplay ? 'autoplay; ' : '')+'fullscreen; picture-in-picture; encrypted-media';
   f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
