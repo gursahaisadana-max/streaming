@@ -548,9 +548,7 @@ function openPlayer(k){
   f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
   wrap.append(f);
   const note = document.createElement('p'); note.className = 'pnote';
-  note.textContent = 'If the screen stays blank, the stream site may block embedding. That is not a bug in this app. ';
-  const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'Open the stream in a new tab';
-  note.append(a);
+    note.textContent = 'If the screen stays blank, the stream site may block embedding. That is not a bug in this app.';
   p.append(top, wrap, note); p.hidden = false; back.focus();
 }
 function closePlayer(){ const p = $('#player'); p.replaceChildren(); p.hidden = true; } // removing the iframe stops playback
