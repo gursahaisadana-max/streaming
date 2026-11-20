@@ -462,57 +462,89 @@
   /* ---------- Home screen icon ----------
      Draws an original "G" mark on a canvas, then uses it as the
      home screen icon, favicon, and web app manifest icon. */
-  function drawIcon(size) {
-    var c = document.createElement("canvas");
-    c.width = c.height = size;
-    var ctx = c.getContext("2d");
-    var g = ctx.createLinearGradient(0, 0, size, size);
-    g.addColorStop(0, "#5eead4");
-    g.addColorStop(1, "#2bb3c0");
-    ctx.fillStyle = g;
+<script>
+(function setupGhostIcons() {
+  function createGhostIcon(size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Periwinkle background (#a89cf7)
+    ctx.fillStyle = '#a89cf7';
     ctx.fillRect(0, 0, size, size);
 
-    var cx = size / 2, cy = size / 2, r = size * 0.24;
-    ctx.strokeStyle = "#062a2c";
-    ctx.lineWidth = size * 0.12;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 1.75, false);   // open "G" curve
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx + r * 0.05, cy);                  // G crossbar
-    ctx.lineTo(cx + r, cy);
-    ctx.stroke();
-    // small sparkle dot
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.arc(cx + r * 1.05, cy - r * 1.15, size * 0.04, 0, Math.PI * 2);
-    ctx.fill();
-    return c.toDataURL("image/png");
-  }
-  function setupIcons() {
-    try {
-      var icon180 = drawIcon(180);
-      $("touchIcon").setAttribute("href", icon180);
-      $("favIcon").setAttribute("href", icon180);
+    // Scale drawing to a 100x100 grid
+    ctx.save();
+    ctx.scale(size / 100, size / 100);
 
-      var manifest = {
-        name: "Ghost Wallet",
-        short_name: "Ghost Wallet",
-        display: "standalone",
-        background_color: "#000000",
-        theme_color: "#000000",
-        start_url: location.href,
-        icons: [
-          { src: drawIcon(192), sizes: "192x192", type: "image/png" },
-          { src: drawIcon(512), sizes: "512x512", type: "image/png" }
-        ]
-      };
-      $("manifestLink").setAttribute("href",
-        "data:application/manifest+json," + encodeURIComponent(JSON.stringify(manifest)));
-    } catch (e) { /* icons are optional */ }
+    // 2. Ghost body (off-white #fbfbf8)
+    ctx.fillStyle = '#fbfbf8';
+    ctx.beginPath();
+    // Top-right arch down to right side
+    ctx.moveTo(48, 25);
+    ctx.bezierCurveTo(68, 23, 81, 35, 81, 53);
+    // Right-most tentacle lobe
+    ctx.bezierCurveTo(81, 63, 76, 68, 70, 68);
+    ctx.bezierCurveTo(65, 68, 63, 64, 62, 62);
+    // Middle tentacle lobe
+    ctx.bezierCurveTo(60, 69, 55, 73, 49, 73);
+    ctx.bezierCurveTo(43, 73, 41, 68, 40, 66);
+    // Left-most sweeping tail lobe
+    ctx.bezierCurveTo(36, 74, 27, 78, 20, 74);
+    ctx.bezierCurveTo(14, 70, 17, 58, 26, 46);
+    // Left swooping back up to top arch
+    ctx.bezierCurveTo(34, 35, 40, 26, 48, 25);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Two periwinkle eyes
+    ctx.fillStyle = '#a89cf7';
+    // Left eye
+    ctx.beginPath();
+    ctx.ellipse(58.5, 46, 3.8, 4.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Right eye
+    ctx.beginPath();
+    ctx.ellipse(69.5, 46, 3.8, 4.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+    return canvas.toDataURL('image/png');
   }
+
+  const icon180 = createGhostIcon(180);
+  const icon192 = createGhostIcon(192);
+  const icon512 = createGhostIcon(512);
+
+  // Set iOS Home Screen & Browser Favicon
+  const touchIcon = document.getElementById('touchIcon');
+  const favIcon = document.getElementById('favIcon');
+  const manifestLink = document.getElementById('manifestLink');
+
+  if (touchIcon) touchIcon.href = icon180;
+  if (favIcon) favIcon.href = icon192;
+
+  // Set Android / PWA Manifest
+  if (manifestLink) {
+    const manifest = {
+      name: 'Ghost Wallet',
+      short_name: 'Ghost',
+      start_url: '.',
+      display: 'standalone',
+      background_color: '#000000',
+      theme_color: '#a89cf7',
+      icons: [
+        { src: icon192, sizes: '192x192', type: 'image/png' },
+        { src: icon512, sizes: '512x512', type: 'image/png' }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    manifestLink.href = URL.createObjectURL(blob);
+  }
+})();
+</script>
+
 
   /* ---------- Start ---------- */
   loadState();
