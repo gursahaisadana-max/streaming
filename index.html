@@ -317,7 +317,9 @@
 (function () {
   "use strict";
 
-  /* ---------- Sample data ---------- */
+  /* ---------- Sample data ----------
+     "weight" is each item's share of the total. Cash + tokens add up to 1.
+     "price" is a fake price per token, used only to compute the amount. */
   var CASH_WEIGHT = 0.10;
   var TOKENS = [
     { sym: "SOL",  name: "Solana",   color: "#7c4dff", weight: 0.38, price: 168.20,    chg: 3.42 },
@@ -330,7 +332,7 @@
   var STORAGE_KEY = "ghostWalletDemoV2";
   var state = { balance: 12480.55, pct: -1.47, promoHidden: false };
 
-  /* ---------- Storage ---------- */
+  /* ---------- Storage (wrapped so it never breaks the app) ---------- */
   function loadState() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -363,6 +365,7 @@
   function render() {
     $("balanceBtn").textContent = fmtUsd(state.balance);
 
+    // Daily change in dollars from the percent
     var prev = state.balance / (1 + state.pct / 100);
     var diff = state.balance - prev;
     var up = state.pct >= 0;
@@ -370,6 +373,7 @@
     $("changeAmt").textContent = (up ? "+" : "-") + fmtUsd(Math.abs(diff));
     $("changePill").textContent = fmtPct(state.pct);
 
+    // Cash and token values scale with the total
     $("cashUsd").textContent = fmtUsd(state.balance * CASH_WEIGHT);
 
     var html = "";
@@ -455,92 +459,87 @@
     if (e.key === "Enter" && $("sheet").classList.contains("show")) onSave();
   });
 
-  /* ---------- Start ---------- */
-  loadState();
-  render();
-})();
-</script>
+  /* ---------- Home screen icon ----------
+     Draws the tilted ghost mark on a canvas, then uses it as the
+     home screen icon, favicon, and web app manifest icon. */
+  function drawIcon(size) {
+    var c = document.createElement("canvas");
+    c.width = c.height = size;
+    var ctx = c.getContext("2d");
 
-<script>
-(function setupGhostIcons() {
-  function createGhostIcon(size) {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-
-    // 1. Periwinkle background (#a89cf7)
-    ctx.fillStyle = '#a89cf7';
+    // 1. Background color matching the app (#a89cf7)
+    ctx.fillStyle = "#a89cf7";
     ctx.fillRect(0, 0, size, size);
 
     // Scale drawing to a 100x100 grid
     ctx.save();
     ctx.scale(size / 100, size / 100);
 
-    // 2. Ghost body (off-white #fbfbf8)
-    ctx.fillStyle = '#fbfbf8';
+    // Optional subtle drop shadow for depth
+    ctx.shadowColor = "rgba(0, 0, 0, 0.12)";
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 3;
+
+    // 2. Tilted Ghost Body
+    ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    // Top-right arch down to right side
-    ctx.moveTo(48, 25);
-    ctx.bezierCurveTo(68, 23, 81, 35, 81, 53);
-    // Right-most tentacle lobe
-    ctx.bezierCurveTo(81, 63, 76, 68, 70, 68);
-    ctx.bezierCurveTo(65, 68, 63, 64, 62, 62);
-    // Middle tentacle lobe
-    ctx.bezierCurveTo(60, 69, 55, 73, 49, 73);
-    ctx.bezierCurveTo(43, 73, 41, 68, 40, 66);
-    // Left-most sweeping tail lobe
-    ctx.bezierCurveTo(36, 74, 27, 78, 20, 74);
-    ctx.bezierCurveTo(14, 70, 17, 58, 26, 46);
-    // Left swooping back up to top arch
-    ctx.bezierCurveTo(34, 35, 40, 26, 48, 25);
+    ctx.moveTo(42, 18);
+    ctx.bezierCurveTo(68, 16, 84, 34, 84, 56);
+    ctx.bezierCurveTo(84, 72, 73, 78, 62, 78);
+    ctx.bezierCurveTo(55, 78, 52, 72, 48, 70);
+    ctx.bezierCurveTo(44, 68, 41, 74, 34, 74);
+    ctx.bezierCurveTo(24, 74, 16, 64, 20, 48);
+    ctx.bezierCurveTo(23, 34, 30, 21, 42, 18);
     ctx.closePath();
     ctx.fill();
 
-    // 3. Two periwinkle eyes
-    ctx.fillStyle = '#a89cf7';
-    // Left eye
+    // Reset shadow for eyes
+    ctx.shadowColor = "transparent";
+
+    // 3. Two vertical oval eyes
+    ctx.fillStyle = "#a89cf7";
     ctx.beginPath();
-    ctx.ellipse(58.5, 46, 3.8, 4.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(62, 45, 3.2, 5.2, 0.1, 0, Math.PI * 2);
     ctx.fill();
-    // Right eye
     ctx.beginPath();
-    ctx.ellipse(69.5, 46, 3.8, 4.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(73, 47, 3.2, 5.2, 0.1, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
-    return canvas.toDataURL('image/png');
+    return c.toDataURL("image/png");
   }
 
-  const icon180 = createGhostIcon(180);
-  const icon192 = createGhostIcon(192);
-  const icon512 = createGhostIcon(512);
+  function setupIcons() {
+    try {
+      var icon180 = drawIcon(180);
+      var icon192 = drawIcon(192);
+      var icon512 = drawIcon(512);
 
-  // Set iOS Home Screen & Browser Favicon
-  const touchIcon = document.getElementById('touchIcon');
-  const favIcon = document.getElementById('favIcon');
-  const manifestLink = document.getElementById('manifestLink');
+      $("touchIcon").setAttribute("href", icon180);
+      $("favIcon").setAttribute("href", icon192);
 
-  if (touchIcon) touchIcon.href = icon180;
-  if (favIcon) favIcon.href = icon192;
-
-  // Set Android / PWA Manifest
-  if (manifestLink) {
-    const manifest = {
-      name: 'Ghost Wallet',
-      short_name: 'Ghost',
-      start_url: '.',
-      display: 'standalone',
-      background_color: '#000000',
-      theme_color: '#a89cf7',
-      icons: [
-        { src: icon192, sizes: '192x192', type: 'image/png' },
-        { src: icon512, sizes: '512x512', type: 'image/png' }
-      ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-    manifestLink.href = URL.createObjectURL(blob);
+      var manifest = {
+        name: "Ghost Wallet",
+        short_name: "Ghost Wallet",
+        display: "standalone",
+        background_color: "#000000",
+        theme_color: "#a89cf7",
+        start_url: location.href,
+        icons: [
+          { src: icon192, sizes: "192x192", type: "image/png" },
+          { src: icon512, sizes: "512x512", type: "image/png" }
+        ]
+      };
+      $("manifestLink").setAttribute("href",
+        "data:application/manifest+json," + encodeURIComponent(JSON.stringify(manifest)));
+    } catch (e) { /* icons are optional */ }
   }
+
+  /* ---------- Start ---------- */
+  loadState();
+  render();
+  setupIcons();
 })();
 </script>
 </body>
